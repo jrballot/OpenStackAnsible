@@ -2,9 +2,10 @@
 # tasks file for memcached
 
 - name: "Installing RabbitMQ Server"
-  yum:
+  dnf:
     name: rabbitmq-server
     state: present
+  register: is_installed
 
 - name: "Enabling RabbitMQ Server"
   systemd:
@@ -22,3 +23,4 @@
       read_priv: .*
       write_priv: .*
     state: present
+  when: is_installed.changed == "false"
