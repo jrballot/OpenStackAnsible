@@ -1,0 +1,73 @@
+---
+# tasks file for openstack-keystone-controller
+
+- name: "Installing Keystone"
+  yum: 
+    name: [openstack-keystone, httpd, mod_wsgi]
+    state: present
+
+- name: "Removing keystone user to MariaDB"
+  mysql_user:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    name: "{{mysql.keystone_user}}"
+    host_all: yes
+    state: absent
+
+- name: "Adding keystone user to MariaDB"
+  mysql_user:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    name: "{{mysql.keystone_user}}"
+    password: "{{mysql.keystone_password}}"
+    priv: "{{ mysql.keystone_priv }}"
+    host: "{{item}}"
+    state: present
+  loop: "{{mysql.keystone_hosts}}"
+
+- name: "Creating Keystone database on MariaDB"
+  mysql_db:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    name: keystone
+    state: present
+
+- name: "Copying Keystone template file to /etc/keystone"
+  template:
+    src: keystone.conf.j2
+    dest: /etc/keystone/keystone.conf
+
+- name: "Syncing Keystone database"
+  command:  /bin/sh -c '/bin/keystone-manage db_sync'
+
+- name: "Token Setup"
+  command: /bin/keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+
+- name: "Credentials Setup"
+  command: /bin/keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+
+- name: "Bootstraping Keystone"
+  command: /bin/keystone-manage bootstrap --bootstrap-password qwe123qwe --bootstrap-admin-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-internal-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-public-url http://{{ansible_eth2.ipv4.address}}:5000/v3/ --bootstrap-region-id RegionOne
+
+
+
+- name: "Check if project service existis"
+  shell: |
+    source /root/admin.rc
+    openstack project show service
+  register: service_exists 
+
+- name: "Creating Projects and Domains"
+  shell: |
+    source /root/admin.rc
+    openstack project create --domain default --description "Service Project" service
+  when: service_exists.rc != 0
+
+- name: "Link wsgi-keystone.conf to /etc/httpd/conf.d"
+  file:
+    src: /usr/share/keystone/wsgi-keystone.conf
+    dest: /etc/httpd/conf.d/wsgi-keystone.conf
+    state: link
+  notify:
+  - 'restart httpd'
+

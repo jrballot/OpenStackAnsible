@@ -1,0 +1,33 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  gather_facts: true
+  roles:
+  - openstack-pre
+               
+- hosts: controller
+  become: yes
+  gather_facts: true
+  roles:
+  #- mariadb
+  #- rabbitmq
+  #- memcached
+  - openstack-keystone-controller
+  - openstack-glance-controller
+  #- openstack-nova-controller
+
+#- hosts: compute*
+#  become: yes
+#  become_method: sudo
+#  gather_facts: false
+#  roles:
+#  - openstack-nova-compute
+#  - openstack-neutron-compute
+#
+#- hosts: network
+#  become: yes
+#  gather_facts: false
+#  roles:
+#  - openstack-neutron-controller
+  

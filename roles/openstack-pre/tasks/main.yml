@@ -1,0 +1,39 @@
+- name: "[Prerequisites] Disable firewalld and NetworkManager."
+  service: name={{item}} state=stopped enabled=no  
+  with_items:
+    - "firewalld"
+    - "NetworkManager"  
+
+- name: "[Prerequisites] Disable SELinux"
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: "Install repositorie packages for OpenStack Ussuri"
+  yum:
+    name: "{{item}}"
+    state: present
+  with_items:
+    - "centos-release-openstack-ussuri"
+    - "vim"
+    - "chrony"
+  register: result
+
+- name: "Garantee OpenStack Ussuri repo enabled"
+  yum:
+    enablerepo: centos-openstack-ussuri
+  when: result is success
+  register: result
+
+- name: "Updating packages"
+  yum:
+    name: '*'
+    state: latest 
+  when: result is success
+ 
+- name: "Installing openstack client"
+  yum:
+    name: "python-openstackclient"
+    state: present
+
+               

@@ -1,0 +1,66 @@
+---
+# tasks file for openstack-glance-controller
+
+
+- name: "Installing OpenStack Glance"
+  yum:
+    name: openstack-glance
+    state: present
+
+
+- name: "Create Glance database on MySQL"
+  mysql_db:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    name: glance
+
+- name: "Create Glance user on MySQL"
+  mysql_user:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    name: "{{mysql.glance_user}}"
+    password: "{{mysql.glance_password}}"
+    priv: "{{mysql.glance_priv}}"
+    host: "{{item}}"
+    state: present
+  loop: "{{mysql.glance_hosts}}"
+    
+- name: "Garantee Glance Service enabled"
+  systemd:
+    name: "{{item}}"
+    enabled: yes
+  loop:
+    - openstack-glance-api
+    - openstack-glance-registry 
+
+- name: "Copying Glance Registry configuration template"
+  template:
+    src: glance-registry.conf.j2
+    dest: /etc/glance/glance-registry.conf
+  notify:
+    - restart glance-registry
+
+- name: "Copying Glance API configuration template"
+  template:
+    src: glance-api.conf.j2
+    dest: /etc/glance/glance-api.conf
+  notify:
+    - restart glance-api
+
+
+- name: "Configuring User,Roles,Service and Endpoints"
+  shell: |
+   source /root/admin.rc
+   openstack user create --domain default --password "{{mysql.glance_password}}" "{{mysql.glance_user}}"
+   openstack role add --project service --user glance admin
+   openstack service create --name glance --description "OpenStack Image" image
+
+   openstack endpoint create --region RegionOne image public http://{{ansible_eth2.ipv4.address}}:9292
+   openstack endpoint create --region RegionOne image internal http://{{ansible_eth1.ipv4.address}}:9292
+   openstack endpoint create --region RegionOne image admin http://{{ansible_eth1.ipv4.address}}:9292 
+   exit 0
+
+
+- name: "Syncing Glance database"
+  command: su -s /bin/sh -c "glance-manage db_sync" glance
+

@@ -1,0 +1,24 @@
+---
+# tasks file for memcached
+
+- name: "Installing RabbitMQ Server"
+  yum:
+    name: rabbitmq-server
+    state: present
+
+- name: "Enabling RabbitMQ Server"
+  systemd:
+    name: rabbitmq-server
+    enabled: yes
+    state: started
+
+- name: "Adding openstack user to RabbitMQ Server"
+  rabbitmq_user:
+    user: openstack
+    password: qwe123qwe
+    permissions:
+    - vhost: /
+      configure_priv: .*
+      read_priv: .*
+      write_priv: .*
+    state: present

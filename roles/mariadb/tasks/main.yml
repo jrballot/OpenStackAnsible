@@ -1,0 +1,41 @@
+---
+# tasks file for mariadb
+
+- name: "Installing MariaDB"
+  yum:
+    name: "{{item}}"
+    state: present
+  loop:
+  - mariadb
+  - mariadb-server
+  - python2-PyMySQL 
+
+- name: "Enabling MariaDB service"
+  systemd:
+    name: mariadb
+    enabled: yes
+    state: started
+
+- name: "Changing Root Password"
+  mysql_user:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.old_password}}"
+    host_all: yes
+    user: "{{ mysql.user }}"
+    password: "{{ mysql.new_password }}"
+
+- name: "Copying template my.cnf.j2 to /etc/my.cnf "
+  template:
+    src: my.cnf.j2
+    dest: /etc/my.cnf
+  notify:
+  - restart mariadb
+
+- name: "Copying template my.cnf.j2 to root account /roo/.my.cnf"
+  template:
+    src: my.cnf.j2
+    dest: /root/.my.cnf
+  notify:
+  - restart mariadb
+
+

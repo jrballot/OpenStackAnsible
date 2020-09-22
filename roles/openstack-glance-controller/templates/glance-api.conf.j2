@@ -1,0 +1,21 @@
+[database]
+connection = mysql+pymysql://{{mysql.glance_user}}:{{mysql.glance_password}}@{{ansible_eth1.ipv4.address}}/glance
+
+[keystone_authtoken]
+www_authenticate_uri  = http://{{ansible_eth1.ipv4.address}}:5000
+auth_url = http://{{ansible_eth1.ipv4.address}}:5000
+memcached_servers = {{ansible_eth1.ipv4.address}}:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = {{mysql.glance_user}}
+password = {{mysql.glance_password}}
+
+[paste_deploy]
+flavor = keystone
+
+[glance_store]
+stores = file,http
+default_store = file
+filesystem_store_datadir = /var/lib/glance/images/

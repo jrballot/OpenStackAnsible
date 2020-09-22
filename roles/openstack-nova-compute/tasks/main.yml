@@ -1,0 +1,9 @@
+- name: "Install OpenStack Nova"
+  yum:
+    name: "{{item}}"
+    state: present
+  loop:
+  - openstack-nova-compute
+  - openstack-neutron-linuxbridge
+  - ebtables 
+  - ipset

@@ -1,0 +1,12 @@
+---
+# vars file for mariadb
+mysql:
+  user: "root"
+  old_password: ''
+  new_password: 'qwe123qwe'
+  hosts:
+  - "{{ ansible_eth1.ipv4.address }}"
+  - "127.0.0.1"
+  - "::1"
+  - "localhost"
+  privileges: "*.*:ALL,GRANT"

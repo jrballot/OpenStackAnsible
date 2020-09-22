@@ -1,0 +1,15 @@
+---
+# vars file for openstack-glance-controller
+
+mysql:
+  user: 'root'
+  password: 'qwe123qwe'
+  glance_user: 'glance'
+  glance_password: 'qwe123qwe'
+  glance_priv: 'glance.*:ALL'
+  glance_hosts:
+    - "{{ansible_eth1.ipv4.address}}"
+    - localhost
+    - 127.0.0.1
+    - ::1
+     

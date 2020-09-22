@@ -1,0 +1,13 @@
+---
+# vars file for mariadb
+mysql:
+  user: "root"
+  password: 'qwe123qwe'
+  keystone_user: 'keystone'
+  keystone_password: 'qwe123qwe'
+  keystone_priv: 'keystone.*:ALL'
+  keystone_hosts: 
+    - "{{ ansible_eth1.ipv4.address}}"
+    - localhost
+    - 127.0.0.1
+    - ::1

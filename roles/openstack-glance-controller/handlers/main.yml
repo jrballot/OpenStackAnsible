@@ -1,0 +1,12 @@
+---
+# handlers file for openstack-glance-controller
+
+- name: restart glance-api
+  systemd:
+    name: openstack-glance-api
+    state: restarted
+
+- name: restart glance-registry
+  systemd:
+    name: openstack-glance-registry
+    state: restarted
