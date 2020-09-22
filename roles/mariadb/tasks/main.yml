@@ -8,7 +8,8 @@
   loop:
   - mariadb
   - mariadb-server
-  - python2-PyMySQL 
+  - python3-PyMySQL 
+  register: is_installed
 
 - name: "Enabling MariaDB service"
   systemd:
@@ -23,6 +24,7 @@
     host_all: yes
     user: "{{ mysql.user }}"
     password: "{{ mysql.new_password }}"
+  when: is_installed.changed == "false"
 
 - name: "Copying template my.cnf.j2 to /etc/my.cnf "
   template:

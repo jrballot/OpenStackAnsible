@@ -2,9 +2,14 @@
 # tasks file for openstack-keystone-controller
 
 - name: "Installing Keystone"
-  yum: 
-    name: [openstack-keystone, httpd, mod_wsgi]
+  dnf: 
+    name: [openstack-keystone, httpd, python3-mod_wsgi]
     state: present
+
+- name: "Enable HTTPd"
+  systemd:
+    name: httpd
+    enabled: yes
 
 - name: "Removing keystone user to MariaDB"
   mysql_user:
@@ -49,20 +54,6 @@
 - name: "Bootstraping Keystone"
   command: /bin/keystone-manage bootstrap --bootstrap-password qwe123qwe --bootstrap-admin-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-internal-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-public-url http://{{ansible_eth2.ipv4.address}}:5000/v3/ --bootstrap-region-id RegionOne
 
-
-
-- name: "Check if project service existis"
-  shell: |
-    source /root/admin.rc
-    openstack project show service
-  register: service_exists 
-
-- name: "Creating Projects and Domains"
-  shell: |
-    source /root/admin.rc
-    openstack project create --domain default --description "Service Project" service
-  when: service_exists.rc != 0
-
 - name: "Link wsgi-keystone.conf to /etc/httpd/conf.d"
   file:
     src: /usr/share/keystone/wsgi-keystone.conf
@@ -70,4 +61,32 @@
     state: link
   notify:
   - 'restart httpd'
+
+- name: "Adding project Service"  
+  os_project:
+    cloud: 4cloud
+    endpoint_type: admin
+    state: present
+    name: service
+    description: "Service Project"
+    domain_id: default
+    enabled: true
+
+#- name: "Copying admin.rc file"
+#  template: 
+#    src: admin.rc.j2
+#    dest: /root/admin.rc
+#
+#- name: "Check if project service existis"
+#  shell: |
+#    source /root/admin.rc;
+#    openstack project show service
+#  register: service_exists 
+#
+#- name: "Creating Projects and Domains"
+#  shell: |
+#    source /root/admin.rc
+#    openstack project create --domain default --description "Service Project" service
+#  when: service_exists.rc != 0
+
 

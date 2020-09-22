@@ -15,7 +15,7 @@ machines = {
 Vagrant.configure("2") do |config|
   machines.each do |name,conf|
     config.vm.define "#{name}" do |srv|
-      srv.vm.box = "centos/7"
+      srv.vm.box = "centos/8"
       srv.vm.hostname = "#{name}.example.com"
       srv.vm.provider 'virtualbox' do |vb|
         vb.name = "#{name}"
@@ -54,10 +54,10 @@ Vagrant.configure("2") do |config|
 	srv.vm.network 'private_network', ip: "192.168.120.14", virtualbox__intnet: "storage"
       end
     
-      srv.vm.provision "ansible" do |ansible|
-        ansible.verbose = '-vv'
-        ansible.playbook = "playbook.yml"
-      end
+      #srv.vm.provision "ansible" do |ansible|
+      #  ansible.verbose = '-vvv'
+      #  ansible.playbook = "playbook.yml"
+      #end
 
     end
   end

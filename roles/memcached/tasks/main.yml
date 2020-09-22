@@ -2,12 +2,12 @@
 # tasks file for memcached
 
 - name: "Installing Memcached"
-  yum:
+  dnf:
     name: "{{item}}"
     state: present
   loop:
   - memcached
-  - python-memcached
+  - python3-memcached
 
 - name: "Copying template for /etc/sysconfig/memcached"
   template:

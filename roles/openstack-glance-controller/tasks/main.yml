@@ -1,12 +1,15 @@
 ---
 # tasks file for openstack-glance-controller
 
-
-- name: "Installing OpenStack Glance"
-  yum:
-    name: openstack-glance
+- name: "Installing Python3 Glance"
+  dnf:
+    name: python3-glance
     state: present
 
+- name: "Installing OpenStack Glance"
+  dnf:
+    name: openstack-glance
+    state: present
 
 - name: "Create Glance database on MySQL"
   mysql_db:
@@ -25,7 +28,7 @@
     state: present
   loop: "{{mysql.glance_hosts}}"
     
-- name: "Garantee Glance Service enabled"
+- name: "Guarantee Glance Service enabled"
   systemd:
     name: "{{item}}"
     enabled: yes

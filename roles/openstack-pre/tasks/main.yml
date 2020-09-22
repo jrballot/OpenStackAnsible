@@ -9,31 +9,32 @@
     policy: targeted
     state: permissive
 
-- name: "Install repositorie packages for OpenStack Ussuri"
+- name: "Install repositorie packages for OpenStack"
   yum:
     name: "{{item}}"
     state: present
   with_items:
-    - "centos-release-openstack-ussuri"
+    - "epel-release"
+    - "centos-release-openstack-train"
     - "vim"
     - "chrony"
   register: result
 
-- name: "Garantee OpenStack Ussuri repo enabled"
+- name: "Guarantee OpenStack repo enabled"
   yum:
-    enablerepo: centos-openstack-ussuri
+    enablerepo: centos-openstack-train
   when: result is success
   register: result
 
-- name: "Updating packages"
-  yum:
-    name: '*'
-    state: latest 
-  when: result is success
+#- name: "Updating packages"
+#  yum:
+#    name: '*'
+#    state: latest 
+#  when: result is success
  
 - name: "Installing openstack client"
   yum:
-    name: "python-openstackclient"
+    name: "python3-openstackclient"
     state: present
 
                
