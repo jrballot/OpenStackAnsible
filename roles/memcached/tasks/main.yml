@@ -8,6 +8,10 @@
   loop:
   - memcached
   - python3-memcached
+  register: dnf_res
+  retries: 3
+  delay: 10
+  until: dnf_res.rc == 0
 
 - name: "Copying template for /etc/sysconfig/memcached"
   template:
