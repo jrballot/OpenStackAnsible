@@ -11,18 +11,19 @@
     name: httpd
     enabled: yes
 
-- name: "Removing keystone user to MariaDB"
-  mysql_user:
-    login_user: "{{mysql.user}}"
-    login_password: "{{mysql.password}}"
-    name: "{{mysql.keystone_user}}"
-    host_all: yes
-    state: absent
+    #- name: "Removing keystone user to MariaDB"
+    #  mysql_user:
+    #    login_user: "{{mysql.user}}"
+    #    login_password: "{{mysql.password}}"
+    #    name: "{{mysql.keystone_user}}"
+    #    host_all: yes
+    #    state: absent
 
 - name: "Adding keystone user to MariaDB"
   mysql_user:
-    login_user: "{{mysql.user}}"
-    login_password: "{{mysql.password}}"
+#    login_user: "{{mysql.user}}"
+#    login_password: "{{mysql.password}}"
+    login_unix_socket: /var/lib/mysql/mysql.sock
     name: "{{mysql.keystone_user}}"
     password: "{{mysql.keystone_password}}"
     priv: "{{ mysql.keystone_priv }}"
@@ -32,8 +33,9 @@
 
 - name: "Creating Keystone database on MariaDB"
   mysql_db:
-    login_user: "{{mysql.user}}"
-    login_password: "{{mysql.password}}"
+          #login_user: "{{mysql.user}}"
+    #login_password: "{{mysql.password}}"
+    login_unix_socket: /var/lib/mysql/mysql.sock
     name: keystone
     state: present
 
@@ -52,7 +54,7 @@
   command: /bin/keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
 
 - name: "Bootstraping Keystone"
-  command: /bin/keystone-manage bootstrap --bootstrap-password qwe123qwe --bootstrap-admin-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-internal-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-public-url http://{{ansible_eth2.ipv4.address}}:5000/v3/ --bootstrap-region-id RegionOne
+  command: /bin/keystone-manage bootstrap --bootstrap-password qwe123qwe --bootstrap-admin-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-internal-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-public-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-region-id RegionOne
 
 - name: "Link wsgi-keystone.conf to /etc/httpd/conf.d"
   file:
@@ -61,6 +63,12 @@
     state: link
   notify:
   - 'restart httpd'
+
+
+- name: "Copying admin.rc file"
+  template: 
+    src: admin.rc.j2
+    dest: /root/admin.rc
 
 - name: "Adding project Service"  
   os_project:
@@ -71,11 +79,6 @@
     description: "Service Project"
     domain_id: default
     enabled: true
-
-#- name: "Copying admin.rc file"
-#  template: 
-#    src: admin.rc.j2
-#    dest: /root/admin.rc
 #
 #- name: "Check if project service existis"
 #  shell: |
