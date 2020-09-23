@@ -1,5 +1,15 @@
 [database]
-connection = mysql+pymysql://keystone:qwe123qwe@{{ ansible_eth1.ipv4.address}}/keystone
+connection = mysql+pymysql://keystone:qwe123qwe@{{ansible_eth1.ipv4.address}}/keystone
+
+[cache]
+enabled = true
+backend = dogpile.cache.memcached
+backend_argument = url:127.0.0.1:11211
 
 [token]
 provider = fernet
+#provider = jws
+
+#[jwt_tokens]
+#jws_public_key_repository
+#jws_private_key_repository
