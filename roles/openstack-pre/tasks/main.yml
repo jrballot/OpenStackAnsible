@@ -2,7 +2,7 @@
   service: name={{item}} state=stopped enabled=no  
   with_items:
     - "firewalld"
-    - "NetworkManager"  
+      #    - "NetworkManager"  
 
 - name: "[Prerequisites] Disable SELinux"
   selinux:
@@ -10,30 +10,37 @@
     state: permissive
 
 - name: "Install repositorie packages for OpenStack"
-  yum:
+  dnf:
     name: "{{item}}"
     state: present
-  with_items:
+  loop:
     - "epel-release"
     - "centos-release-openstack-train"
+    - "network-scripts"
     - "vim"
     - "chrony"
   register: result
 
+  #- name: "Enable network-scripts"
+  #systemd:
+  #  name: "network"
+  #  state: started
+  #  enabled: yes
+
 - name: "Guarantee OpenStack repo enabled"
-  yum:
+  dnf:
     enablerepo: centos-openstack-train
   when: result is success
   register: result
 
 #- name: "Updating packages"
-#  yum:
+#  dnf:
 #    name: '*'
 #    state: latest 
 #  when: result is success
  
 - name: "Installing openstack client"
-  yum:
+  dnf:
     name: "python3-openstackclient"
     state: present
 
