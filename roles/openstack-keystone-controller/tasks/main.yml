@@ -9,6 +9,7 @@
 - name: "Enable HTTPd"
   systemd:
     name: httpd
+    state: started
     enabled: yes
 
     #- name: "Removing keystone user to MariaDB"
@@ -70,15 +71,15 @@
     src: admin.rc.j2
     dest: /root/admin.rc
 
-- name: "Adding project Service"  
-  os_project:
-    cloud: 4cloud
-    endpoint_type: admin
-    state: present
-    name: service
-    description: "Service Project"
-    domain_id: default
-    enabled: true
+#- name: "Adding project Service"  
+#  os_project:
+#    cloud: 4cloud
+#    endpoint_type: admin
+#    state: present
+#    name: service
+#    description: "Service Project"
+#    domain_id: default
+#    enabled: true
 #
 #- name: "Check if project service existis"
 #  shell: |
