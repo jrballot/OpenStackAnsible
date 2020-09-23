@@ -10,9 +10,9 @@
   become: yes
   gather_facts: true
   roles:
-  #- mariadb
-  #- rabbitmq
-  #- memcached
+  - mariadb
+  - rabbitmq
+  - memcached
   - openstack-keystone-controller
   - openstack-glance-controller
   #- openstack-nova-controller
