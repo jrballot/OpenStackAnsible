@@ -15,12 +15,14 @@
   mysql_db:
     login_user: "{{mysql.user}}"
     login_password: "{{mysql.password}}"
-    name: glance
+    login_host: "{{ansible_eth1.ipv4.address}}"
+    name: 'glance'
 
 - name: "Create Glance user on MySQL"
   mysql_user:
     login_user: "{{mysql.user}}"
     login_password: "{{mysql.password}}"
+    login_host: "{{ansible_eth1.ipv4.address}}"
     name: "{{mysql.glance_user}}"
     password: "{{mysql.glance_password}}"
     priv: "{{mysql.glance_priv}}"
