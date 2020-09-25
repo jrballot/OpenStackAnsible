@@ -1,2 +1,106 @@
 ---
-# tasks file for openstack-neutron-controller
+# tasks file for openstack-neutron-controller---
+- name: "Create Neutron Database"
+  mysql_db:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    login_host: "{{ansible_eth1.ipv4.address}}"
+    name: 'neutron'
+
+- name: "Create Neutron Database User"
+  mysql_user:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    login_host: "{{ansible_eth1.ipv4.address}}"
+    name: "{{neutron.user}}"
+    password: "{{neutron.password}}"
+    priv: "{{mysql.neutron_priv}}"
+    host: "{{item}}"
+    state: present
+  loop: "{{mysql.neutron_hosts}}"
+
+- name: "Validade if Neutron OpenStack User exist"
+  shell: |
+    source /root/admin.rc
+    openstack user show "{{neutron.user}}" &> /dev/null
+  register: shell_res
+  ignore_errors: yes
+
+- name: "Create Neutron OpenStack User"
+  shell: |
+    source /root/admin.rc
+    openstack user create --domain default --password "{{neutron.password}}" "{{neutron.user}}"
+  when: shell_res.rc != 0
+
+- name: "Adding Neutron OpenStack User to Project Service"
+  shell: |
+    source /root/admin.rc
+    openstack role add --project service --user "{{neutron.user}}" admin
+  ignore_errors: yes
+  when: shell_res.rc != 0
+
+- name: "Validate if Neutron Service is Created"
+  shell: |
+    source /root/admin.rc      
+    openstack service show "{{neutron.service}}" 2>1 &> /dev/null
+  ignore_errors: yes
+  register: shell_res
+
+- name: "Create Neutron OpenStack Service"
+  shell: |
+    source /root/admin.rc      
+    openstack service create --name neutron --description "Neutron API" "{{neutron.service}}"
+  ignore_errors: yes
+  when: shell_res.rc != 0
+
+
+- name: "Validate if Neutron Public Endpoint is present"
+  shell: |
+    source /root/admin.rc
+    openstack endpoint list --interface public --service "{{neutron.service}}" 2>1 &> /dev/null
+  ignore_errors: yes
+  register: public_end
+
+- name: "Create Neutron OpenStack Public Endpoint"
+  shell: |
+    source /root/admin.rc      
+    openstack endpoint create --region RegionOne "{{neutron.service}}" public http://{{ansible_eth1.ipv4.address}}:"{{neutron.endpoint_port}}"
+  ignore_errors: yes
+  when: public_end.rc != 0
+
+- name: "Validate if Neutron Internal Endpoint is present"
+  shell: |
+    source /root/admin.rc
+    openstack endpoint list --interface internal --service "{{neutron.service}}" 2>1 &> /dev/null
+  ignore_errors: yes
+  register: internal_end
+
+- name: "Create Neutron OpenStack Internal Endpoint"
+  shell: |
+    source /root/admin.rc      
+    openstack endpoint create --region RegionOne "{{neutron.service}}" internal http://{{ansible_eth1.ipv4.address}}:{{neutron.endpoint_port}}
+  ignore_errors: yes
+  when: internal_end.rc != 0
+
+- name: "Validate if Neutron Admin Endpoint is present"
+  shell: |
+    source /root/admin.rc
+    openstack endpoint list --interface admin --service "{{neutron.service}}" 2>1 &> /dev/null
+  ignore_errors: yes
+  register: admin_end
+
+- name: "Create Neutron OpenStack Admin Endpoint"
+  shell: |
+    source /root/admin.rc      
+    openstack endpoint create --region RegionOne "{{neutron.service}}" admin http://{{ansible_eth1.ipv4.address}}:{{neutron.endpoint_port}}
+  ignore_errors: yes
+  when: admin_end.rc != 0
+
+
+- name: "Install OpenStack Neutron API, Conductor, NoVNCProxy and Scheduler"
+  dnf:
+    name: "{{item}}"
+    state: present
+  loop: "{{neutron.packages}}"
+
+
