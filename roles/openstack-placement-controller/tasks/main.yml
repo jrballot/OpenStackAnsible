@@ -8,12 +8,14 @@
   mysql_db:
     login_user: "{{mysql.user}}"
     login_password: "{{mysql.password}}"
+    login_host: "{{ansible_eth1.ipv4.address}}"
     name: 'placement'
 
 - name: "Create Placement Database User"
   mysql_user:
     login_user: "{{mysql.user}}"
     login_password: "{{mysql.password}}"
+    login_host: "{{ansible_eth1.ipv4.address}}"
     name: "{{placement.user}}"
     password: "{{placement.password}}"
     priv: "{{mysql.placement_priv}}"
