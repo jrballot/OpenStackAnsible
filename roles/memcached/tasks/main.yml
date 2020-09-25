@@ -21,4 +21,5 @@
 - name: "Enabling Memcached Service"
   systemd:
     name: memcached
+    state: started
     enabled: yes
