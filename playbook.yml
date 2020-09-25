@@ -15,6 +15,7 @@
   - memcached
   - openstack-keystone-controller
   - openstack-glance-controller
+  - openstack-placement-controller
   #- openstack-nova-controller
 
 #- hosts: compute*
