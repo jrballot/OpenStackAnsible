@@ -1,0 +1,116 @@
+---
+# tasks file for openstack-placement-controller
+#
+#
+
+
+- name: "Create Placement Database"
+  mysql_db:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    name: 'placement'
+
+- name: "Create Placement Database User"
+  mysql_user:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    name: "{{placement.user}}"
+    password: "{{placement.password}}"
+    priv: "{{mysql.placement_priv}}"
+    host: "{{item}}"
+    state: present
+  loop: "{{mysql.placement_hosts}}"
+
+- name: "Validade if Placement OpenStack User exist"
+  shell: |
+    source /root/admin.rc
+    openstack user show "{{placement.user}}" &> /dev/null
+  register: shell_res
+  ignore_errors: yes
+
+- name: "Create Placement OpenStack User"
+  shell: |
+    source /root/admin.rc
+    openstack user create --domain default --password "{{placement.password}}" "{{placement.user}}"
+  when: shell_res.rc != 0
+
+- name: "Adding Placement OpenStack User to Project Service"
+  shell: |
+    source /root/admin.rc
+    openstack role add --project service --user "{{placement.user}}" admin
+  ignore_errors: yes
+  when: shell_res.rc != 0
+
+- name: "Validate if Placement Service is Created"
+  shell: |
+    source /root/admin.rc      
+    openstack service show placement &> /dev/null
+  ignore_errors: yes
+  register: shell_res
+
+- name: "Create Placement OpenStack Service"
+  shell: |
+    source /root/admin.rc      
+    openstack service create --name placement --description "Placement API" placement
+  ignore_errors: yes
+  when: shell_res.rc != 0
+
+
+- name: "Validate if Placement Public Endpoint is present"
+  shell: |
+    source /root/admin.rc
+    openstack endpoint list --interface public --service placement &> /dev/null
+  ignore_errors: yes
+  register: public_end
+
+- name: "Create Placement OpenStack Public Endpoint"
+  shell: |
+    source /root/admin.rc      
+    openstack endpoint create --region RegionOne placement public http://{{ansible_eth1.ipv4.address}}:8778
+  ignore_errors: yes
+  when: public_end.rc != 0
+
+- name: "Validate if Placement Internal Endpoint is present"
+  shell: |
+    source /root/admin.rc
+    openstack endpoint list --interface internal --service placement &> /dev/null
+  ignore_errors: yes
+  register: internal_end
+
+- name: "Create Placement OpenStack Internal Endpoint"
+  shell: |
+    source /root/admin.rc      
+    openstack endpoint create --region RegionOne placement internal http://{{ansible_eth1.ipv4.address}}:8778
+  ignore_errors: yes
+  when: internal_end.rc != 0
+
+- name: "Validate if Placement Admin Endpoint is present"
+  shell: |
+    source /root/admin.rc
+    openstack endpoint list --interface admin --service placement &> /dev/null
+  ignore_errors: yes
+  register: admin_end
+
+- name: "Create Placement OpenStack Admin Endpoint"
+  shell: |
+    source /root/admin.rc      
+    openstack endpoint create --region RegionOne placement admin http://{{ansible_eth1.ipv4.address}}:8778
+  ignore_errors: yes
+  when: admin_end.rc != 0
+
+- name: "Install OpenStack Placement API"
+  dnf:
+    name: openstack-placement-api
+    state: present
+
+- name: "Creating PLacemente configuration file"
+  template:
+    src: placement.conf.j2
+    dest: /etc/placement/placement.conf
+
+- name: "Populate Placement API database"
+  shell: |
+    /bin/sh -c "placement-manage db sync" placement
+  notify: restart-httpd
+
+
