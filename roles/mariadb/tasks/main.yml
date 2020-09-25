@@ -23,12 +23,6 @@
   notify:
   - restart mariadb
 
-    #- name: "Changing Root Password"
-    #  shell: >
-    #    mysql -NBe 'SET PASSWORD FOR "{{mysql.user}}"@"{{item}}" = PASSWORD("{{mysql.new_password}}");'
-    #  loop: "{{mysql.hosts}}"
-    #  when: change_root_password
-
 - name: "Changing Root Password"
   mysql_user:
           #   login_user: "{{mysql.user}}"
@@ -38,6 +32,8 @@
     user: "{{ mysql.user }}"
     password: "{{ mysql.new_password }}"
   when: change_root_password
+  notify:
+  - restart mariadb
 
 
 - name: "Copying template my.cnf.j2 to root account /roo/.my.cnf"
