@@ -1,2 +1,22 @@
 ---
-# vars file for openstack-nova-controller
+# vars file for openstack-nova-controller---
+
+mysql:
+  user: 'root'
+  password: 'qwe123qwe'
+  nova_priv: 'nova.*:ALL'
+  nova_hosts:
+    - "{{ansible_eth1.ipv4.address}}"
+    - localhost
+    - 127.0.0.1
+    - ::1
+
+nova:   
+  user: 'nova'
+  password: 'qwe123qwe'
+  service: 'compute'
+  packages:
+   - "openstack-nova-api"
+   - "openstack-nova-conductor"
+   - "openstack-nova-novncproxy"
+   - "openstack-nova-scheduler"  

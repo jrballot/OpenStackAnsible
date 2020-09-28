@@ -1,2 +1,104 @@
 ---
 # tasks file for openstack-nova-controller
+- name: "Create Nova Database"
+  mysql_db:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    name: 'nova'
+
+- name: "Create Nova Database User"
+  mysql_user:
+    login_user: "{{mysql.user}}"
+    login_password: "{{mysql.password}}"
+    name: "{{nova.user}}"
+    password: "{{nova.password}}"
+    priv: "{{mysql.nova_priv}}"
+    host: "{{item}}"
+    state: present
+  loop: "{{mysql.nova_hosts}}"
+
+- name: "Validade if Nova OpenStack User exist"
+  shell: |
+    source /root/admin.rc
+    openstack user show "{{nova.user}}" &> /dev/null
+  register: shell_res
+  ignore_errors: yes
+
+- name: "Create Nova OpenStack User"
+  shell: |
+    source /root/admin.rc
+    openstack user create --domain default --password "{{nova.password}}" "{{nova.user}}"
+  when: shell_res.rc != 0
+
+- name: "Adding Nova OpenStack User to Project Service"
+  shell: |
+    source /root/admin.rc
+    openstack role add --project service --user "{{nova.user}}" admin
+  ignore_errors: yes
+  when: shell_res.rc != 0
+
+- name: "Validate if Nova Service is Created"
+  shell: |
+    source /root/admin.rc      
+    openstack service show "{{nova.service}}" &> /dev/null
+  ignore_errors: yes
+  register: shell_res
+
+- name: "Create Nova OpenStack Service"
+  shell: |
+    source /root/admin.rc      
+    openstack service create --name nova --description "Nova API" "{{nova.service}}"
+  ignore_errors: yes
+  when: shell_res.rc != 0
+
+
+- name: "Validate if Nova Public Endpoint is present"
+  shell: |
+    source /root/admin.rc
+    openstack endpoint list --interface public --service "{{nova.service}}" &> /dev/null
+  ignore_errors: yes
+  register: public_end
+
+- name: "Create Nova OpenStack Public Endpoint"
+  shell: |
+    source /root/admin.rc      
+    openstack endpoint create --region RegionOne "{{nova.service}}" public http://{{ansible_eth1.ipv4.address}}:8774/v2.1
+  ignore_errors: yes
+  when: public_end.rc != 0
+
+- name: "Validate if Nova Internal Endpoint is present"
+  shell: |
+    source /root/admin.rc
+    openstack endpoint list --interface internal --service "{{nova.service}}" &> /dev/null
+  ignore_errors: yes
+  register: internal_end
+
+- name: "Create Nova OpenStack Internal Endpoint"
+  shell: |
+    source /root/admin.rc      
+    openstack endpoint create --region RegionOne "{{nova.service}}" internal http://{{ansible_eth1.ipv4.address}}:8774/v2.1
+  ignore_errors: yes
+  when: internal_end.rc != 0
+
+- name: "Validate if Nova Admin Endpoint is present"
+  shell: |
+    source /root/admin.rc
+    openstack endpoint list --interface admin --service "{{nova.service}}" &> /dev/null
+  ignore_errors: yes
+  register: admin_end
+
+- name: "Create Nova OpenStack Admin Endpoint"
+  shell: |
+    source /root/admin.rc      
+    openstack endpoint create --region RegionOne "{{nova.service}}" admin http://{{ansible_eth1.ipv4.address}}:8774/v2.1
+  ignore_errors: yes
+  when: admin_end.rc != 0
+
+
+- name: "Install OpenStack Nova API, Conductor, NoVNCProxy and Scheduler"
+  dnf:
+    name: "{{item}}"
+    state: present
+  loop: "{{nova.packages}}"
+
+

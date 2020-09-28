@@ -9,20 +9,22 @@
 - name: "Enable HTTPd"
   systemd:
     name: httpd
+    state: started
     enabled: yes
 
-- name: "Removing keystone user to MariaDB"
-  mysql_user:
-    login_user: "{{mysql.user}}"
-    login_password: "{{mysql.password}}"
-    name: "{{mysql.keystone_user}}"
-    host_all: yes
-    state: absent
+    #- name: "Removing keystone user to MariaDB"
+    #  mysql_user:
+    #    login_user: "{{mysql.user}}"
+    #    login_password: "{{mysql.password}}"
+    #    name: "{{mysql.keystone_user}}"
+    #    host_all: yes
+    #    state: absent
 
 - name: "Adding keystone user to MariaDB"
   mysql_user:
-    login_user: "{{mysql.user}}"
-    login_password: "{{mysql.password}}"
+#    login_user: "{{mysql.user}}"
+#    login_password: "{{mysql.password}}"
+    login_unix_socket: /var/lib/mysql/mysql.sock
     name: "{{mysql.keystone_user}}"
     password: "{{mysql.keystone_password}}"
     priv: "{{ mysql.keystone_priv }}"
@@ -32,8 +34,9 @@
 
 - name: "Creating Keystone database on MariaDB"
   mysql_db:
-    login_user: "{{mysql.user}}"
-    login_password: "{{mysql.password}}"
+          #login_user: "{{mysql.user}}"
+    #login_password: "{{mysql.password}}"
+    login_unix_socket: /var/lib/mysql/mysql.sock
     name: keystone
     state: present
 
@@ -52,7 +55,7 @@
   command: /bin/keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
 
 - name: "Bootstraping Keystone"
-  command: /bin/keystone-manage bootstrap --bootstrap-password qwe123qwe --bootstrap-admin-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-internal-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-public-url http://{{ansible_eth2.ipv4.address}}:5000/v3/ --bootstrap-region-id RegionOne
+  command: /bin/keystone-manage bootstrap --bootstrap-password qwe123qwe --bootstrap-admin-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-internal-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-public-url http://{{ansible_eth1.ipv4.address}}:5000/v3/ --bootstrap-region-id RegionOne
 
 - name: "Link wsgi-keystone.conf to /etc/httpd/conf.d"
   file:
@@ -62,31 +65,33 @@
   notify:
   - 'restart httpd'
 
-- name: "Adding project Service"  
-  os_project:
-    cloud: 4cloud
-    endpoint_type: admin
-    state: present
-    name: service
-    description: "Service Project"
-    domain_id: default
-    enabled: true
 
-#- name: "Copying admin.rc file"
-#  template: 
-#    src: admin.rc.j2
-#    dest: /root/admin.rc
+- name: "Copying admin.rc file"
+  template: 
+    src: admin.rc.j2
+    dest: /root/admin.rc
+
+#- name: "Adding project Service"  
+#  os_project:
+#    cloud: 4cloud
+#    endpoint_type: admin
+#    state: present
+#    name: service
+#    description: "Service Project"
+#    domain_id: default
+#    enabled: true
 #
-#- name: "Check if project service existis"
-#  shell: |
-#    source /root/admin.rc;
-#    openstack project show service
-#  register: service_exists 
-#
-#- name: "Creating Projects and Domains"
-#  shell: |
-#    source /root/admin.rc
-#    openstack project create --domain default --description "Service Project" service
-#  when: service_exists.rc != 0
+- name: "Check if project service existis"
+  shell: |
+    source /root/admin.rc;
+    openstack project show service &> /dev/null
+  register: service_exists 
+  ignore_errors: yes
+
+- name: "Creating Projects and Domains"
+  shell: |
+    source /root/admin.rc
+    openstack project create --domain default --description "Service Project" service
+  when: service_exists.rc != 0
 
 

@@ -1,2 +1,24 @@
 ---
-# vars file for openstack-neutron-controller
+# vars file for openstack-neutron-controller---
+# vars file for openstack-nova-controller---
+
+mysql:
+  user: 'root'
+  password: 'qwe123qwe'
+  neutron_priv: 'neutron.*:ALL'
+  neutron_hosts:
+    - "{{ansible_eth1.ipv4.address}}"
+    - localhost
+    - 127.0.0.1
+    - ::1
+
+neutron:   
+  user: 'neutron'
+  password: 'qwe123qwe'
+  service: 'network'
+  packages:
+  - "openstack-neutron"
+  - "openstack-neutron-ml2"
+  - "openstack-neutron-linuxbridge"
+  - "ebtables"
+  endpoint_port: "9696"

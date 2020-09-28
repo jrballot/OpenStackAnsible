@@ -2,7 +2,7 @@
 # vars file for mariadb
 mysql:
   user: "root"
-  old_password: ''
+  old_password: 'qwe123qwe'
   new_password: 'qwe123qwe'
   hosts:
   - "{{ ansible_eth1.ipv4.address }}"
