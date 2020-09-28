@@ -4,9 +4,9 @@
 # Definição de maquinas do Laboratório de MongoDB
 machines = {
 	"controller"  => { "memory" => "4096", "cpus" => "1" },
-	"network"     => { "memory" => "1024", "cpus" => "1" },
-	"compute01"   => { "memory" => "1024", "cpus" => "1" },
-	"compute02"   => { "memory" => "1024", "cpus" => "1" },
+	#"network"     => { "memory" => "1024", "cpus" => "1" },
+	"compute01"   => { "memory" => "4096", "cpus" => "1" },
+	"compute02"   => { "memory" => "4096", "cpus" => "1" },
 	#"block"       => { "memory" => "512", "cpus" => "1" },
 	#"object01"    => { "memory" => "512", "cpus" => "1" },
 	#"object02"    => { "memory" => "512", "cpus" => "1" },
@@ -14,6 +14,7 @@ machines = {
 
 Vagrant.configure("2") do |config|
   machines.each do |name,conf|
+    config.vm.boot_timeout = 120
     config.vm.define "#{name}" do |srv|
       srv.vm.box = "centos/8"
       srv.vm.hostname = "#{name}.example.com"
@@ -58,6 +59,8 @@ Vagrant.configure("2") do |config|
       #  ansible.verbose = '-vvv'
       #  ansible.playbook = "playbook.yml"
       #end
+
+      srv.vm.provision "shell", inline: "dnf update -y"
 
     end
   end
