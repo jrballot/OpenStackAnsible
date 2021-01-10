@@ -5,8 +5,8 @@
 machines = {
 	"controller"  => { "memory" => "4096", "cpus" => "1" },
 	#"network"     => { "memory" => "1024", "cpus" => "1" },
-	"compute01"   => { "memory" => "4096", "cpus" => "1" },
-	"compute02"   => { "memory" => "4096", "cpus" => "1" },
+	"compute01"   => { "memory" => "2048", "cpus" => "1" },
+	"compute02"   => { "memory" => "2048", "cpus" => "1" },
 	#"block"       => { "memory" => "512", "cpus" => "1" },
 	#"object01"    => { "memory" => "512", "cpus" => "1" },
 	#"object02"    => { "memory" => "512", "cpus" => "1" },
